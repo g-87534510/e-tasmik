@@ -1,9 +1,10 @@
 (() => {
   const $ = id => document.getElementById(id);
   const STORE = 'e-tasmik-v1';
+  const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbxeCvCHQOElLFaz4DKbWcage3-PMzuBq_1kvySxrlIZMDVr8_ElkHpozsCIrw-Pn0IiGg/exec';
   const today = new Date().toISOString().slice(0, 10);
   const readStore = () => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } };
-  let state = { students: (window.ROSTER || []).map(s => ({ id: s.id, name: s.name, className: s.className, active: true })), records: [], teachers: (window.TEACHERS || []).map(t => ({ ...t })), settings: { 'Nama Sekolah':'Sekolah Kebangsaan Bandar Tawau','Kod Sekolah':'XBA3051','Nama Guru':'','Tahun Akademik':new Date().getFullYear(),'Sasaran Harian':'1' }, apiUrl: '' };
+  let state = { students: (window.ROSTER || []).map(s => ({ id: s.id, name: s.name, className: s.className, active: true })), records: [], teachers: (window.TEACHERS || []).map(t => ({ ...t })), settings: { 'Nama Sekolah':'Sekolah Kebangsaan Bandar Tawau','Kod Sekolah':'XBA3051','Nama Guru':'','Tahun Akademik':new Date().getFullYear(),'Sasaran Harian':'1' }, apiUrl: DEFAULT_API_URL, apiUrlDisabled: false };
   const persist = () => localStorage.setItem(STORE, JSON.stringify(state));
   const initials = name => (name || '?').trim().split(/\s+/).slice(0, 2).map(x => x[0]).join('').toUpperCase();
   const shortDate = str => { if (!str) return '—'; const d = new Date(`${str}T00:00:00`); return d.toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric'}); };
@@ -17,7 +18,7 @@
   const readingDetail = r => r.readingType==='Iqra'?`Muka surat ${esc(r.page)}`:r.pageStart?`Muka surat ${esc(r.pageStart)}${r.pageEnd&&r.pageEnd!==r.pageStart?`–${esc(r.pageEnd)}`:''}`:(r.surah?`${esc(r.surah)} · Ayat ${esc(r.startAyah)}–${esc(r.endAyah)}`:'—');
   const teacherKey=t=>String(t.name||t['Nama Guru']||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('ms');
   const mergeTeachers=(defaults=[],provided=[])=>{const merged=new Map();defaults.forEach(t=>{const key=teacherKey(t);if(key)merged.set(key,{...t,active:t.active!==false});});provided.forEach(t=>{const key=teacherKey(t);if(!key)return;const old=merged.get(key);merged.set(key,{...old,...t,id:t.id||t['ID Guru']||old?.id,name:t.name||t['Nama Guru']||old?.name,active:t.active!==undefined?t.active!==false&&t['Aktif']!=='Tidak':t['Aktif']!=='Tidak'});});return [...merged.values()];};
-  const getData = () => { const saved=readStore(); const savedStudents=Array.isArray(saved.students)?saved.students:[]; const savedTeachers=Array.isArray(saved.teachers)?saved.teachers:[]; state={...state,...saved}; const savedById=new Map(savedStudents.map(s=>[String(s.id||s['ID Murid']),s])); if((window.ROSTER||[]).length)state.students=window.ROSTER.map(s=>{const old=savedById.get(String(s.id));return {...s,active:old?(old.active!==false&&old['Aktif']!=='Tidak'):true};}); else if (!Array.isArray(state.students)||!state.students.length) state.students=[]; state.teachers=mergeTeachers(window.TEACHERS||[],savedTeachers); };
+  const getData = () => { const saved=readStore(); const savedStudents=Array.isArray(saved.students)?saved.students:[]; const savedTeachers=Array.isArray(saved.teachers)?saved.teachers:[]; state={...state,...saved}; if(saved.apiUrlDisabled)state.apiUrl=''; else if(!saved.apiUrl)state.apiUrl=DEFAULT_API_URL; const savedById=new Map(savedStudents.map(s=>[String(s.id||s['ID Murid']),s])); if((window.ROSTER||[]).length)state.students=window.ROSTER.map(s=>{const old=savedById.get(String(s.id));return {...s,active:old?(old.active!==false&&old['Aktif']!=='Tidak'):true};}); else if (!Array.isArray(state.students)||!state.students.length) state.students=[]; state.teachers=mergeTeachers(window.TEACHERS||[],savedTeachers); };
   async function api(action, payload) {
     if (!state.apiUrl) throw new Error('URL Apps Script belum disimpan.');
     const url = new URL(state.apiUrl); url.searchParams.set('action',action);
@@ -230,9 +231,9 @@
     finally{button.disabled=!isLive();button.textContent='Kemas kini senarai Google Sheets';}
   });
   $('connect-button').addEventListener('click',async()=>{
-    const value=$('api-url').value.trim();if(!value){state.apiUrl='';persist();renderHeader();notify('URL sambungan dikosongkan.');return;}
-    try {const u=new URL(value);if(!u.hostname.endsWith('google.com')&&!u.hostname.endsWith('googleusercontent.com'))throw new Error('Gunakan URL Web App Google Apps Script.');state.apiUrl=value;const data=await api('bootstrap');if(!data.ok)throw new Error(data.error||'Respons Apps Script tidak sah.');state.students=data.students||[];state.records=data.records||[];state.teachers=mergeTeachers(window.TEACHERS||[],data.teachers||[]);state.settings={...state.settings,...data.settings};persist();renderAll();notify('Google Sheets berjaya disambungkan.');}
-    catch(err){state.apiUrl='';persist();renderHeader();notify(`Sambungan gagal: ${err.message}`);}
+    const value=$('api-url').value.trim();if(!value){state.apiUrl='';state.apiUrlDisabled=true;persist();renderHeader();notify('URL sambungan dikosongkan.');return;}
+    try {const u=new URL(value);if(!u.hostname.endsWith('google.com')&&!u.hostname.endsWith('googleusercontent.com'))throw new Error('Gunakan URL Web App Google Apps Script.');state.apiUrl=value;state.apiUrlDisabled=false;const data=await api('bootstrap');if(!data.ok)throw new Error(data.error||'Respons Apps Script tidak sah.');state.students=data.students||[];state.records=data.records||[];state.teachers=mergeTeachers(window.TEACHERS||[],data.teachers||[]);state.settings={...state.settings,...data.settings};persist();renderAll();notify('Google Sheets berjaya disambungkan.');}
+    catch(err){state.apiUrl='';state.apiUrlDisabled=true;persist();renderHeader();notify(`Sambungan gagal: ${err.message}`);}
   });
   $('teacher-form').addEventListener('submit',async e=>{
     e.preventDefault();const name=$('teacher-input').value.trim();if(!name)return;

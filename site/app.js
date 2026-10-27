@@ -251,5 +251,12 @@
     if(isLive()){try{const result=await api('',{action:'updateSettings',settings});if(!result.ok)throw new Error(result.error||'Gagal menyimpan tetapan.');state.settings={...state.settings,...result.settings};}catch(e){notify(`Tetapan tidak disimpan: ${e.message}`);return;}}
     else state.settings={...state.settings,...settings};persist();renderAll();notify(isLive()?'Tetapan disimpan ke Google Sheets.':'Tetapan disimpan pada peranti ini.');
   });
+  let installPrompt=null;
+  const installButton=$('install-button');
+  const appIsInstalled=()=>window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;installButton.hidden=appIsInstalled();});
+  installButton.addEventListener('click',async()=>{if(!installPrompt)return;const promptEvent=installPrompt;installPrompt=null;await promptEvent.prompt();await promptEvent.userChoice;installButton.hidden=true;});
+  window.addEventListener('appinstalled',()=>{installPrompt=null;installButton.hidden=true;});
+  if('serviceWorker' in navigator&&window.isSecureContext)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(error=>console.warn('Service worker tidak dapat didaftarkan.',error)));
   $('chart-range').value='7';getData();renderAll();if(isLive())refreshFromServer();
 })();

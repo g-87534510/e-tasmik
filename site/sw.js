@@ -1,9 +1,9 @@
-const CACHE_NAME = 'e-tasmik-shell-v5';
+const CACHE_NAME = 'e-tasmik-shell-v6';
 const SHELL_FILES = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './styles.css?v=20261028-dashboard-summary-1',
+  './styles.css?v=20261028-cheerful-1',
   './students.js?v=20261017-session-classes-1',
   './teachers.js?v=20261019-teachers-1',
   './app.js?v=20261028-khatam-2',

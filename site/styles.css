@@ -283,3 +283,8 @@ body{background:#eaf8f7 url("ocean-wallpaper.svg") center/cover fixed no-repeat}
 .main-area{background:linear-gradient(180deg,rgba(242,251,249,.7),rgba(237,248,248,.52))}
 .sidebar{background:rgba(255,255,255,.94)}
 @media(max-width:720px){body{background-attachment:scroll}.main-area{background:linear-gradient(180deg,rgba(242,251,249,.72),rgba(237,248,248,.6))}}
+
+/* Scenic sea photograph, softened behind the readable app panels */
+body{background-color:#eaf8f7;background-image:linear-gradient(rgba(242,250,249,.2),rgba(237,248,248,.16)),url("ocean-landscape.jpg");background-position:center,center 46%;background-size:cover,cover;background-repeat:no-repeat;background-attachment:fixed,fixed}
+.main-area{background:linear-gradient(180deg,rgba(245,251,249,.28),rgba(239,248,248,.18))}
+@media(max-width:720px){body{background-attachment:scroll,scroll}.main-area{background:linear-gradient(180deg,rgba(245,251,249,.32),rgba(239,248,248,.24))}}

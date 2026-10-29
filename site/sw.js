@@ -1,10 +1,11 @@
-const CACHE_NAME = 'e-tasmik-shell-v7';
+const CACHE_NAME = 'e-tasmik-shell-v8';
 const SHELL_FILES = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './styles.css?v=20261029-ocean-1',
+  './styles.css?v=20261029-ocean-photo-1',
   './ocean-wallpaper.svg',
+  './ocean-landscape.jpg',
   './students.js?v=20261017-session-classes-1',
   './teachers.js?v=20261019-teachers-1',
   './app.js?v=20261028-khatam-2',
